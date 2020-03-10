@@ -11,12 +11,10 @@ It will also perform metrics on the returned translations, BLEU, for example.
 
 ## To-Do
 
-- Add function for dealing with input_file i.e., save file to pandas df, batch the translations, and save them to df.
-  - Already written, just need to tweak to include in translator.py
-- Add BLEU scores, and check API docs as some may provide this already.
-  - Although, a few seem to produce a variant of this, i.e., confidence in the translation itself.
-- The single_sentence_translate function should return a dictionary of the translations, rather than print them?
-- Modify some of the args to be optional/required etc.  Check argparse doc for params.
+- Investigate BLEU NLTK doc for best scores possible.
+- Check API docs as some may provide their own BLEU scores too.
+- Deal with erroneous languages by searching LANG_CODES.
+  - Should also obtain the codes for each API too, "fr", "de", et cetera.
 - Add date_time stamp to file outputs to avoid creating duplicates/overwriting.
 - Add option for simple file with just source sentences, and no gold standard
 
@@ -36,3 +34,10 @@ It will also perform metrics on the returned translations, BLEU, for example.
     - Microsoft Azure
     - Google Translate
     - Lilt (if using)?
+
+## Done
+
+- Added BLEU scores (prelim only, needs further investigation).
+- single_sentence_translate now returns a dictionary, rather than printing.
+- Added file_translate function which returns df with all API translations.
+- Modified the argparse "args" with relevant parameters.
