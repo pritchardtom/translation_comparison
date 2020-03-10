@@ -37,20 +37,41 @@ def language_verifier(string_from_args):
         # return f"{string_from_args} is a supported language"
 
 
-def microsoft_translate(text="hello", target_language="fr"):
+def microsoft_translate(text="hello", source_language="ar", target_language="en"):
     payload = {"to": target_language}
     body = [{"text": text}]
     ms_request = requests.post(api_cfg.MICROSOFT_ENDPOINT_URL, params=payload, headers=api_cfg.MS_HEADERS, json=body).json()
     return ms_request[0]["translations"][0]["text"]
 
 
-def yandex_translate(text="hello", target_language="fr"):
+def yandex_translate(text="hello", source_language="ar", target_language="en"):
     payload = {"key": api_cfg.YANDEX_API_KEY, "text": text, "lang": target_language}
     yan_request = requests.get(api_cfg.YANDEX_URL, params=payload).json()
     return yan_request["text"][0]
 
 
-def google_translate(text="hello", target_language="fr"):
+def google_translate(text="hello", source_language="ar", target_language="en"):
     translate_client = google_trans.Client()
-    goo_request = translate_client.translate(text, target_language)
+    goo_request = translate_client.translate(text, target_language, format_="text")
     return goo_request["translatedText"]
+
+
+def single_sentence_translate(text, source_language, target_language):
+    yandex = yandex_translate(text, source_language, target_language)
+    microsoft = microsoft_translate(text, source_language, target_language)
+    google = google_translate(text, source_language, target_language)
+    print(yandex)
+    print(microsoft)
+    print(google)
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-i", "--input_file", help="Select the .csv file with source sentences.")
+parser.add_argument("-o", "--output_file", help="Select a filename to save the results --> (not avail under '-s' option).")
+parser.add_argument("-p", "--phrase", help="Translate a single phrase/sentence.  Result returned to stdout.")
+parser.add_argument("-s", "--source_lang", help="Source language of input text/phrase.", default="en")
+parser.add_argument("-t", "--trans_to", help="Language to translate source to.", default="fr")
+args = parser.parse_args()
+
+if args.phrase:
+    test = single_sentence_translate(args.phrase, args.source_lang, args.trans_to)
