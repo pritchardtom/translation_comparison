@@ -1,7 +1,7 @@
 """
 This is where you should put all your API keys and endpoint URLs, et cetera.
 """
-
+import os
 import uuid
 
 
@@ -28,10 +28,17 @@ MS_HEADERS = {
     'X-ClientTraceId': str(uuid.uuid4())
 }
 
+# set the microsoft env vars, if not already:
+if not MS_KEY_VAR in os.environ and MS_ENDPOINT_VAR in os.environ:
+    os.environ[f"{MS_KEY_VAR}"] = MICROSOFT_API_KEY
+    os.environ[f"{MS_ENDPOINT_VAR}"] = MICROSOFT_ENDPOINT_URL
 
 ################################################################################
 # GOOGLE
 
+GOOGLE_ENV_VAR = "GOOGLE_APPLICATION_CREDENTIALS"
 GOOGLE_JSON = "<insert path to google project .json file within quotes>"
 
-################################################################################
+# set the Google env var:
+if not GOOGLE_ENV_VAR in os.environ:
+    os.environ[f"{GOOGLE_ENV_VAR}"] = GOOGLE_JSON
