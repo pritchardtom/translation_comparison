@@ -21,18 +21,18 @@ It will also perform metrics on the returned translations, BLEU, for example.
 - Add option for simple file with just source sentences, and no gold standard
 
 - Create installation instructions:
-        - Anaconda
-        - conda create -n translate python=3.7 ...
-        - packages used:
-                - google-cloud-translate
-                - uuid
-                - pandas
-                - requests
-                - nltk
-                - et cetera.
-        - Google SDK
-        - API Keys:
-                - Yandex --> https://translate.yandex.com/developers/keys
-                - Microsoft Azure
-                - Google Translate
-                - Lilt (if using)?
+  - Anaconda
+    - conda create -n translate python=3.7 ...
+    - packages used:
+    - google-cloud-translate
+    - uuid
+    - pandas
+    - requests
+    - nltk
+    - et cetera.
+    - Google SDK
+  - API Keys:
+    - Yandex --> https://translate.yandex.com/developers/keys
+    - Microsoft Azure
+    - Google Translate
+    - Lilt (if using)?
