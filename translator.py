@@ -100,26 +100,44 @@ def calculate_bleu(dataframe):
     return dataframe
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-i", "--input_file", help="Select the .csv file with source sentences.")
-parser.add_argument("-o", "--output_file", help="Select a filename to save the results --> (not avail under '-s' option).")
-parser.add_argument("-p", "--phrase", help="Translate a single phrase/sentence.  Result returned to stdout.")
-parser.add_argument("-s", "--source_lang", help="Source language of input text/phrase.", default="en")
-parser.add_argument("-t", "--trans_to", help="Language to translate source to.", default="fr")
-args = parser.parse_args()
+def main():
+    """"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--input_file", help="Select the .csv file with source sentences.")
+    parser.add_argument("-o", "--output_file", help="Select a filename to save the results --> (not avail under '-s' option).")
+    parser.add_argument("-p", "--phrase", help="Translate a single phrase/sentence.  Result returned to stdout.")
+    parser.add_argument("-s", "--source_lang", help="Source language of input text/phrase.", default="en")
+    parser.add_argument("-t", "--trans_to", help="Language to translate source to.", default="fr")
+    args = parser.parse_args()
+
+    if args.phrase:
+        ans = single_sentence_translate(args.phrase, args.source_lang, args.trans_to)
+        print()
+        print(f"Yandex....... {ans['Yandex']}")
+        print(f"Microsoft.... {ans['Microsoft']}")
+        print(f"Google....... {ans['Google']}")
+        print()
+
+    if args.input_file:
+        df = readfile(args.input_file)
+        res = file_translate(df, args.source_lang, args.trans_to)
+        bleu = calculate_bleu(res)
+        writefile(bleu, args.output_file)
+
+if __name__ == "__main__":
+    main()
 
 
-if args.phrase:
-    ans = single_sentence_translate(args.phrase, args.source_lang, args.trans_to)
-    print()
-    print(f"Yandex....... {ans['Yandex']}")
-    print(f"Microsoft.... {ans['Microsoft']}")
-    print(f"Google....... {ans['Google']}")
-    print()
+# df = df[['x','z','y','q','p']]
+# df
 
-
-if args.input_file:
-    df = readfile(args.input_file)
-    res = file_translate(df, args.source_lang, args.trans_to)
-    bleu = calculate_bleu(res)
-    writefile(bleu, args.output_file)
+# def check_language(language):
+#     """Check if language entered at CLI is valid"""
+#     if language.lower() in langs.LANG_CODES:
+#         print("That language is supported.")
+#     else:
+#         print("That language is not supported.")
+#
+# check_language("Frencha")
+# print(api_cfg.MICROSOFT_API_KEY)
+#

@@ -1,4 +1,7 @@
 __pycache__/
 private_api_config.py
 arabic_english.csv
+english_arabic.csv
 test.csv
+qtest.csv
+test2.csv
