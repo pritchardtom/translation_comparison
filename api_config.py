@@ -15,8 +15,8 @@ YANDEX_URL = "<insert URL within quotes>"
 ################################################################################
 # MICROSOFT
 
-MICROSOFT_API_VER = "/translate?api-version=3.0"
 MICROSOFT_API_KEY = "<insert API Key within quotes>"
+MICROSOFT_API_VER = "/translate?api-version=3.0"
 MICROSOFT_ENDPOINT_URL = "https://api.cognitive.microsofttranslator.com/" + MICROSOFT_API_VER
 MS_KEY_VAR = "TRANSLATOR_TEXT_SUBSCRIPTION_KEY" # subscription key for Translator resource
 MS_ENDPOINT_VAR = "TRANSLATOR_TEXT_ENDPOINT"         # global endpoint for Translator resource
@@ -49,3 +49,6 @@ if not GOOGLE_ENV_VAR in os.environ:
 LILT_API_KEY = "<insert API Key within quotes>"
 LILT_ENDPOINT_URL = "https://lilt.com/2"
 LILT_MEMORY_URL = LILT_ENDPOINT_URL + "/memories"
+LILT_TRANSLATE_URL = LILT_ENDPOINT_URL + "/translate"
+
+# LILT_PAYLOAD = {"key": LILT_API_KEY}

@@ -52,9 +52,16 @@ def google_translate(text, source_language, target_language):
     return goo_request["translatedText"]
 
 
+def lilt_translate(mem_id, text):
+    """Send a translate request to Lilt API and return result."""
+    payload = {"key":api_cfg.LILT_API_KEY, "memory_id": mem_id, "source": text}
+    lilt_request = requests.get(api_cfg.LILT_TRANSLATE_URL, params=payload).json()
+    return lilt_request[0]
+
+
 def lilt_test():
-    payload = {"key": api_cfg.LILT_API_KEY}
-    lilt_req = requests.get(api_cfg.LILT_ENDPOINT_URL, params=payload)
+    """Simple Auth test to check API works."""
+    lilt_req = requests.get(api_cfg.LILT_ENDPOINT_URL, params=api_cfg.LILT_PAYLOAD)
     print(lilt_req)
 
 
@@ -74,8 +81,18 @@ def create_lilt_memory(mem_name, source_language, target_language):
     return res.json()["id"]
 
 
-def get_lilt_memory_id():
+def delete_lilt_memory():
+    """
+    Ideally, this should take one parameter --> function get_lilt_memory_id(mem_name)
+    and return the mem_id.  Will this work though?
+    """
     pass
+
+
+def get_lilt_memory_id(mem_name):
+    payload = {"key": api_cfg.LILT_API_KEY}
+    res = requests.get(api_cfg.LILT_MEMORY_URL, params=payload)
+    # need to search results and obtain the id for name
 
 
 def single_sentence_translate(text, source_language, target_language):
