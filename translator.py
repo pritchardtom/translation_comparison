@@ -30,15 +30,8 @@ def writefile(dataframe, filename):
         print("There was an error writing your file.")
 
 
-def language_verifier(string_from_args):
-    """Take a language from args, and return if an accepted language."""
-    pass
-    # if string_from_args in langs.LANG_CODES:
-        # call each service trans to check codes
-        # return f"{string_from_args} is a supported language"
-
-
 def microsoft_translate(text, source_language, target_language):
+    """Send a translate request to Microsoft API and return result."""
     payload = {"to": target_language}
     body = [{"text": text}]
     ms_request = requests.post(api_cfg.MICROSOFT_ENDPOINT_URL, params=payload, headers=api_cfg.MS_HEADERS, json=body).json()
@@ -46,18 +39,50 @@ def microsoft_translate(text, source_language, target_language):
 
 
 def yandex_translate(text, source_language, target_language):
+    """Send a translate request to Yandex API and return result."""
     payload = {"key": api_cfg.YANDEX_API_KEY, "text": text, "lang": target_language}
     yan_request = requests.get(api_cfg.YANDEX_URL, params=payload).json()
     return yan_request["text"][0]
 
 
 def google_translate(text, source_language, target_language):
+    """Send a translate request via Google's Python Cloud module and return result."""
     translate_client = google_trans.Client()
     goo_request = translate_client.translate(text, target_language, format_="text")
     return goo_request["translatedText"]
 
 
+def lilt_test():
+    payload = {"key": api_cfg.LILT_API_KEY}
+    lilt_req = requests.get(api_cfg.LILT_ENDPOINT_URL, params=payload)
+    print(lilt_req)
+
+
+def search_lilt_memory():
+    pass
+
+
+def create_lilt_memory(mem_name, source_language, target_language):
+    """
+    In order to submit translation requests to Lilt API, the request must
+    include a memory_id.  This function creates a Lilt Memory under user's
+    account, and returns the memory_id to use in translation request.
+    """
+    payload = {"key": api_cfg.LILT_API_KEY}
+    body = [("name", mem_name), ("srclang", source_language), ("trglang", target_language)]
+    res = requests.post(api_cfg.LILT_ENDPOINT_URL, params=payload, data=body)
+    return res.json()["id"]
+
+
+def get_lilt_memory_id():
+    pass
+
+
 def single_sentence_translate(text, source_language, target_language):
+    """
+    When selecting the arg -p or --phrase at CLI, returns individual sentence
+    translation for each supported API.
+    """
     yandex = yandex_translate(text, source_language, target_language)
     microsoft = microsoft_translate(text, source_language, target_language)
     google = google_translate(text, source_language, target_language)
@@ -66,13 +91,15 @@ def single_sentence_translate(text, source_language, target_language):
 
 
 def file_translate(dataframe, source_language, target_language):
-    yandex_trans = []
-    microsoft_trans = []
-    google_trans = []
-    for item in dataframe["Source"]:
-        yandex_trans.append(yandex_translate(item, source_language, target_language))
-        microsoft_trans.append(microsoft_translate(item, source_language, target_language))
-        google_trans.append(google_translate(item, source_language, target_language))
+    """
+    When selecting the arg -i or --input_file at CLI, takes a Pandas
+    DataFrame conversion of the .csv input file, and translates each source
+    sentence contained within the DataFrame via the supported APIs.  Results are
+    saved into DataFrame and returned.
+    """
+    yandex_trans = [yandex_translate(item, source_language, target_language) for item in dataframe["Source"]]
+    microsoft_trans = [microsoft_translate(item, source_language, target_language) for item in dataframe["Source"]]
+    google_trans = [google_translate(item, source_language, target_language) for item in dataframe["Source"]]
     dataframe["Yandex_Translation"] = yandex_trans
     dataframe["Microsoft_Translation"] = microsoft_trans
     dataframe["Google_Translation"] = google_trans
@@ -80,6 +107,13 @@ def file_translate(dataframe, source_language, target_language):
 
 
 def calculate_bleu(dataframe):
+    """
+    Reads the Gold_Std and API translations from DataFrame into
+    separate lists, and uses the NLTK module to calculate each
+    translation's BLEU score.  Results are saved to DataFrame and
+    returned.
+    """
+    ref_sentences = []
     yandex_bleu = []
     microsoft_bleu = []
     google_bleu = []
@@ -88,12 +122,9 @@ def calculate_bleu(dataframe):
         yandex_sentences = dataframe["Yandex_Translation"][idx].split(" ")
         microsoft_sentences = dataframe["Microsoft_Translation"][idx].split(" ")
         google_sentences = dataframe["Google_Translation"][idx].split(" ")
-        yandex_score = sentence_bleu(ref_sentences, yandex_sentences)
-        microsoft_score = sentence_bleu(ref_sentences, microsoft_sentences)
-        google_score = sentence_bleu(ref_sentences, google_sentences)
-        yandex_bleu.append(yandex_score)
-        microsoft_bleu.append(microsoft_score)
-        google_bleu.append(google_score)
+        yandex_bleu.append(sentence_bleu(ref_sentences, yandex_sentences))
+        microsoft_bleu.append(sentence_bleu(ref_sentences, microsoft_sentences))
+        google_bleu.append(sentence_bleu(ref_sentences, google_sentences))
     dataframe["Yandex_BLEU"] = yandex_bleu
     dataframe["Microsoft_BLEU"] = microsoft_bleu
     dataframe["Google_BLEU"] = google_bleu
@@ -101,7 +132,11 @@ def calculate_bleu(dataframe):
 
 
 def main():
-    """"""
+    """
+    Decides, depending on command line args passed, what functions to call on
+    the inputed data, whether that's a csv file or a simple sentence, passed
+    on the CLI.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input_file", help="Select the .csv file with source sentences.")
     parser.add_argument("-o", "--output_file", help="Select a filename to save the results --> (not avail under '-s' option).")
@@ -124,20 +159,6 @@ def main():
         bleu = calculate_bleu(res)
         writefile(bleu, args.output_file)
 
+
 if __name__ == "__main__":
     main()
-
-
-# df = df[['x','z','y','q','p']]
-# df
-
-# def check_language(language):
-#     """Check if language entered at CLI is valid"""
-#     if language.lower() in langs.LANG_CODES:
-#         print("That language is supported.")
-#     else:
-#         print("That language is not supported.")
-#
-# check_language("Frencha")
-# print(api_cfg.MICROSOFT_API_KEY)
-#

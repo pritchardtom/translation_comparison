@@ -42,3 +42,10 @@ GOOGLE_JSON = "<insert path to google project .json file within quotes>"
 # set the Google env var:
 if not GOOGLE_ENV_VAR in os.environ:
     os.environ[f"{GOOGLE_ENV_VAR}"] = GOOGLE_JSON
+
+################################################################################
+# LILT
+
+LILT_API_KEY = "<insert API Key within quotes>"
+LILT_ENDPOINT_URL = "https://lilt.com/2"
+LILT_MEMORY_URL = LILT_ENDPOINT_URL + "/memories"
