@@ -9,8 +9,10 @@ import private_api_config as api_cfg
 # import api_config as api_cfg
 from google.cloud import translate_v2 as google_trans
 from nltk.translate.bleu_score import sentence_bleu
+import timeit
 
 ################################################################################
+
 
 def readfile(filename):
     """Read in a .csv and return a Pandas DataFrame"""
@@ -35,6 +37,7 @@ def microsoft_translate(text, source_language, target_language):
     payload = {"to": target_language}
     body = [{"text": text}]
     ms_request = requests.post(api_cfg.MICROSOFT_ENDPOINT_URL, params=payload, headers=api_cfg.MS_HEADERS, json=body).json()
+    print("Microsoft called...")
     return ms_request[0]["translations"][0]["text"]
 
 
@@ -42,57 +45,27 @@ def yandex_translate(text, source_language, target_language):
     """Send a translate request to Yandex API and return result."""
     payload = {"key": api_cfg.YANDEX_API_KEY, "text": text, "lang": target_language}
     yan_request = requests.get(api_cfg.YANDEX_URL, params=payload).json()
+    print("Yandex called...")
     return yan_request["text"][0]
 
 
-def google_translate(text, source_language, target_language):
+def google_translate(text, target_language):
     """Send a translate request via Google's Python Cloud module and return result."""
     translate_client = google_trans.Client()
     goo_request = translate_client.translate(text, target_language, format_="text")
+    print("Google called...")
     return goo_request["translatedText"]
 
 
 def lilt_translate(mem_id, text):
-    """Send a translate request to Lilt API and return result."""
+    """
+    Send a translate request to Lilt API and return result.
+    NOTE: You must have an existing Lilt memory_id to run.
+    """
     payload = {"key":api_cfg.LILT_API_KEY, "memory_id": mem_id, "source": text}
     lilt_request = requests.get(api_cfg.LILT_TRANSLATE_URL, params=payload).json()
+    print("Lilt called...")
     return lilt_request[0]
-
-
-def lilt_test():
-    """Simple Auth test to check API works."""
-    lilt_req = requests.get(api_cfg.LILT_ENDPOINT_URL, params=api_cfg.LILT_PAYLOAD)
-    print(lilt_req)
-
-
-def search_lilt_memory():
-    pass
-
-
-def create_lilt_memory(mem_name, source_language, target_language):
-    """
-    In order to submit translation requests to Lilt API, the request must
-    include a memory_id.  This function creates a Lilt Memory under user's
-    account, and returns the memory_id to use in translation request.
-    """
-    payload = {"key": api_cfg.LILT_API_KEY}
-    body = [("name", mem_name), ("srclang", source_language), ("trglang", target_language)]
-    res = requests.post(api_cfg.LILT_ENDPOINT_URL, params=payload, data=body)
-    return res.json()["id"]
-
-
-def delete_lilt_memory():
-    """
-    Ideally, this should take one parameter --> function get_lilt_memory_id(mem_name)
-    and return the mem_id.  Will this work though?
-    """
-    pass
-
-
-def get_lilt_memory_id(mem_name):
-    payload = {"key": api_cfg.LILT_API_KEY}
-    res = requests.get(api_cfg.LILT_MEMORY_URL, params=payload)
-    # need to search results and obtain the id for name
 
 
 def single_sentence_translate(text, source_language, target_language):
@@ -102,8 +75,13 @@ def single_sentence_translate(text, source_language, target_language):
     """
     yandex = yandex_translate(text, source_language, target_language)
     microsoft = microsoft_translate(text, source_language, target_language)
-    google = google_translate(text, source_language, target_language)
-    results = {"Yandex": yandex, "Microsoft": microsoft, "Google": google}
+    google = google_translate(text, target_language)
+    lilt = lilt_translate(api_cfg.LILT_TEST_MEMORY, text)
+    results = {"Yandex": yandex, "Microsoft": microsoft, "Google": google, "Lilt": lilt}
+    print(f"Yn time: {yan_end_t}")
+    print(f"Ms time: {ms_end_t}")
+    print(f"Go time: {goo_end_t}")
+    print(f"Lt time: {lilt_end_t}")
     return results
 
 
@@ -116,10 +94,12 @@ def file_translate(dataframe, source_language, target_language):
     """
     yandex_trans = [yandex_translate(item, source_language, target_language) for item in dataframe["Source"]]
     microsoft_trans = [microsoft_translate(item, source_language, target_language) for item in dataframe["Source"]]
-    google_trans = [google_translate(item, source_language, target_language) for item in dataframe["Source"]]
+    google_trans = [google_translate(item, target_language) for item in dataframe["Source"]]
+    lilt_trans = [lilt_translate(api_cfg.LILT_TEST_MEMORY, item) for item in dataframe["Source"]]
     dataframe["Yandex_Translation"] = yandex_trans
     dataframe["Microsoft_Translation"] = microsoft_trans
     dataframe["Google_Translation"] = google_trans
+    dataframe["Lilt_Translation"] = lilt_trans
     return dataframe
 
 
@@ -154,6 +134,8 @@ def main():
     the inputed data, whether that's a csv file or a simple sentence, passed
     on the CLI.
     """
+    start_t = timeit.default_timer()
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input_file", help="Select the .csv file with source sentences.")
     parser.add_argument("-o", "--output_file", help="Select a filename to save the results --> (not avail under '-s' option).")
@@ -168,13 +150,18 @@ def main():
         print(f"Yandex....... {ans['Yandex']}")
         print(f"Microsoft.... {ans['Microsoft']}")
         print(f"Google....... {ans['Google']}")
+        print(f"Lilt......... {ans['Lilt']}")
         print()
 
     if args.input_file:
         df = readfile(args.input_file)
         res = file_translate(df, args.source_lang, args.trans_to)
-        bleu = calculate_bleu(res)
-        writefile(bleu, args.output_file)
+        writefile(res, args.output_file)
+        # bleu = calculate_bleu(res)
+        # writefile(bleu, args.output_file)
+
+    end_t = timeit.default_timer()
+    print(f"Total run time: {end_t}")
 
 
 if __name__ == "__main__":
